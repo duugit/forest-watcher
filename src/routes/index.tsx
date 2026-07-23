@@ -86,6 +86,28 @@ const INITIAL_METRICS: Metrics = {
   ],
 };
 
+type Patch = { top: number; left: number; w: number; h: number; r: number };
+
+// Mock AI-detected change patches (percentages relative to the map stage)
+const LOSS_PATCHES: Patch[] = [
+  { top: 18, left: 22, w: 14, h: 9, r: 12 },
+  { top: 30, left: 55, w: 10, h: 7, r: -8 },
+  { top: 46, left: 34, w: 18, h: 11, r: 20 },
+  { top: 58, left: 68, w: 12, h: 8, r: -15 },
+  { top: 70, left: 20, w: 9, h: 6, r: 5 },
+  { top: 26, left: 78, w: 8, h: 6, r: 30 },
+  { top: 80, left: 48, w: 11, h: 7, r: -22 },
+  { top: 12, left: 44, w: 7, h: 5, r: 0 },
+];
+
+const GAIN_PATCHES: Patch[] = [
+  { top: 38, left: 14, w: 8, h: 5, r: -10 },
+  { top: 62, left: 42, w: 9, h: 6, r: 18 },
+  { top: 22, left: 62, w: 7, h: 5, r: -5 },
+  { top: 74, left: 76, w: 8, h: 6, r: 12 },
+  { top: 50, left: 84, w: 6, h: 5, r: 25 },
+];
+
 function mockMetricsFor(region: RegionKey): Metrics {
   const seeds: Record<RegionKey, Metrics> = {
     sagaing: {
