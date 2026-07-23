@@ -500,7 +500,7 @@ function Dashboard() {
                       borderRadius: 8,
                       border: "1px solid var(--border)",
                     }}
-                    formatter={(v: number) => [`${v} km²`, "Area"]}
+                    formatter={((v: number) => [`${v} km²`, "Area"]) as any}
                   />
                   <Bar dataKey="km2" radius={[0, 4, 4, 0]}>
                     {metrics.classes.map((c) => (
