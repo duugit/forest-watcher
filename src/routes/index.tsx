@@ -86,6 +86,28 @@ const INITIAL_METRICS: Metrics = {
   ],
 };
 
+type Patch = { top: number; left: number; w: number; h: number; r: number };
+
+// Mock AI-detected change patches (percentages relative to the map stage)
+const LOSS_PATCHES: Patch[] = [
+  { top: 18, left: 22, w: 14, h: 9, r: 12 },
+  { top: 30, left: 55, w: 10, h: 7, r: -8 },
+  { top: 46, left: 34, w: 18, h: 11, r: 20 },
+  { top: 58, left: 68, w: 12, h: 8, r: -15 },
+  { top: 70, left: 20, w: 9, h: 6, r: 5 },
+  { top: 26, left: 78, w: 8, h: 6, r: 30 },
+  { top: 80, left: 48, w: 11, h: 7, r: -22 },
+  { top: 12, left: 44, w: 7, h: 5, r: 0 },
+];
+
+const GAIN_PATCHES: Patch[] = [
+  { top: 38, left: 14, w: 8, h: 5, r: -10 },
+  { top: 62, left: 42, w: 9, h: 6, r: 18 },
+  { top: 22, left: 62, w: 7, h: 5, r: -5 },
+  { top: 74, left: 76, w: 8, h: 6, r: 12 },
+  { top: 50, left: 84, w: 6, h: 5, r: 25 },
+];
+
 function mockMetricsFor(region: RegionKey): Metrics {
   const seeds: Record<RegionKey, Metrics> = {
     sagaing: {
@@ -401,6 +423,7 @@ function Dashboard() {
             </div>
           </div>
 
+
           {/* Present overlay (right of slider) */}
           <div
             className="pointer-events-none absolute inset-y-0 right-0 z-10 overflow-hidden"
@@ -418,6 +441,67 @@ function Dashboard() {
               Present · Today
             </div>
           </div>
+
+          {/* AI change-detection overlays (revealed on the present/right side of the slider) */}
+          {classified && hasRun && (
+            <div
+              className="pointer-events-none absolute inset-0 z-[15]"
+              style={{ clipPath: `inset(0 0 0 ${sliderPct}%)` }}
+            >
+              {LOSS_PATCHES.map((p, i) => (
+                <div
+                  key={`loss-${i}`}
+                  className="absolute rounded-[40%] border border-red-400/70 shadow-[0_0_12px_rgba(239,68,68,0.35)]"
+                  style={{
+                    top: `${p.top}%`,
+                    left: `${p.left}%`,
+                    width: `${p.w}%`,
+                    height: `${p.h}%`,
+                    transform: `rotate(${p.r}deg)`,
+                    backgroundColor: "rgba(239, 68, 68, 0.5)",
+                  }}
+                />
+              ))}
+              {GAIN_PATCHES.map((p, i) => (
+                <div
+                  key={`gain-${i}`}
+                  className="absolute rounded-[40%] border border-cyan-300/70 shadow-[0_0_12px_rgba(6,182,212,0.4)]"
+                  style={{
+                    top: `${p.top}%`,
+                    left: `${p.left}%`,
+                    width: `${p.w}%`,
+                    height: `${p.h}%`,
+                    transform: `rotate(${p.r}deg)`,
+                    backgroundColor: "rgba(6, 182, 212, 0.5)",
+                  }}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Change-detection legend (bottom-left of map) */}
+          {classified && hasRun && (
+            <div className="absolute bottom-2 left-2 z-30 rounded-md bg-background/90 px-3 py-2 text-[11px] shadow-md backdrop-blur">
+              <div className="mb-1 font-semibold uppercase tracking-wider text-muted-foreground">
+                AI Change Detection
+              </div>
+              <div className="flex items-center gap-2">
+                <span
+                  className="h-3 w-3 rounded-sm border border-red-400/70"
+                  style={{ backgroundColor: "rgba(239, 68, 68, 0.5)" }}
+                />
+                <span>Forest Loss</span>
+              </div>
+              <div className="mt-1 flex items-center gap-2">
+                <span
+                  className="h-3 w-3 rounded-sm border border-cyan-300/70"
+                  style={{ backgroundColor: "rgba(6, 182, 212, 0.5)" }}
+                />
+                <span>Forest Gain</span>
+              </div>
+            </div>
+          )}
+
 
           {/* Slider */}
           <div
