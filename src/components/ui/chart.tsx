@@ -94,6 +94,7 @@ const ChartTooltip = RechartsPrimitive.Tooltip;
 
 const ChartTooltipContent = React.forwardRef<
   HTMLDivElement,
+  React.ComponentProps<"div"> & {
     active?: boolean;
     payload?: any;
     label?: any;
@@ -108,6 +109,7 @@ const ChartTooltipContent = React.forwardRef<
     labelKey?: string;
   }
 >(
+
 
 
   (
