@@ -420,7 +420,44 @@ function Dashboard() {
             />
             <div className="absolute left-3 top-14 rounded-md bg-background/90 px-2.5 py-1 text-xs font-semibold shadow">
               Past · {format(pastDate, "MMM yyyy")}
+          </div>
+
+          {/* AI change-detection overlays (revealed on the present/right side of the slider) */}
+          {classified && hasRun && (
+            <div
+              className="pointer-events-none absolute inset-0 z-15"
+              style={{ clipPath: `inset(0 0 0 ${sliderPct}%)` }}
+            >
+              {LOSS_PATCHES.map((p, i) => (
+                <div
+                  key={`loss-${i}`}
+                  className="absolute rounded-[40%] border border-red-400/70 shadow-[0_0_12px_rgba(239,68,68,0.35)]"
+                  style={{
+                    top: `${p.top}%`,
+                    left: `${p.left}%`,
+                    width: `${p.w}%`,
+                    height: `${p.h}%`,
+                    transform: `rotate(${p.r}deg)`,
+                    backgroundColor: "rgba(239, 68, 68, 0.5)",
+                  }}
+                />
+              ))}
+              {GAIN_PATCHES.map((p, i) => (
+                <div
+                  key={`gain-${i}`}
+                  className="absolute rounded-[40%] border border-cyan-300/70 shadow-[0_0_12px_rgba(6,182,212,0.4)]"
+                  style={{
+                    top: `${p.top}%`,
+                    left: `${p.left}%`,
+                    width: `${p.w}%`,
+                    height: `${p.h}%`,
+                    transform: `rotate(${p.r}deg)`,
+                    backgroundColor: "rgba(6, 182, 212, 0.5)",
+                  }}
+                />
+              ))}
             </div>
+          )}
           </div>
 
           {/* Present overlay (right of slider) */}
