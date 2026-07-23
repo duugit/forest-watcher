@@ -147,14 +147,16 @@ function Dashboard() {
       style: {
         version: 8,
         sources: {
-          osm: {
+          esri: {
             type: "raster",
-            tiles: ["https://a.tile.openstreetmap.org/{z}/{x}/{y}.png"],
+            tiles: [
+              "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+            ],
             tileSize: 256,
-            attribution: "© OpenStreetMap",
+            attribution: "Imagery © Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community",
           },
         },
-        layers: [{ id: "osm", type: "raster", source: "osm" }],
+        layers: [{ id: "esri", type: "raster", source: "esri" }],
       },
       center: REGIONS[region].center,
       zoom: REGIONS[region].zoom,
@@ -375,7 +377,11 @@ function Dashboard() {
           </div>
 
           {/* Map */}
-          <div ref={mapContainerRef} className="absolute inset-0" />
+          <div
+            ref={mapContainerRef}
+            className="absolute inset-0"
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+          />
 
           {/* Past overlay (left of slider) */}
           <div
@@ -433,6 +439,11 @@ function Dashboard() {
                 <path d="M8 6l-4 6 4 6M16 6l4 6-4 6" />
               </svg>
             </button>
+          </div>
+
+          {/* Esri attribution — required by the World Imagery tile service terms */}
+          <div className="absolute bottom-2 right-2 z-30 max-w-[260px] rounded bg-black/50 px-2 py-1 text-[10px] text-white/90 backdrop-blur-sm">
+            Imagery © Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community
           </div>
 
           {loading && (
