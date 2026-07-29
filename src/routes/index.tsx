@@ -82,7 +82,7 @@ const REGION_BOUNDARIES: Record<RegionKey, [number, number][]> = {
   ],
 };
 
-function boundaryFeature(key: RegionKey): GeoJSON.Feature {
+function boundaryFeature(key: RegionKey) {
   return {
     type: "Feature",
     properties: {},
