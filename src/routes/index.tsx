@@ -216,6 +216,25 @@ function Dashboard() {
       attributionControl: false,
     });
     mapRef.current = map;
+    map.on("load", () => {
+      map.addSource("aoi-boundary", {
+        type: "geojson",
+        data: boundaryFeature(region) as never,
+      });
+      map.addLayer({
+        id: "aoi-boundary-fill",
+        type: "fill",
+        source: "aoi-boundary",
+        paint: { "fill-color": "#00D2FF", "fill-opacity": 0.06 },
+      });
+      map.addLayer({
+        id: "aoi-boundary-line",
+        type: "line",
+        source: "aoi-boundary",
+        layout: { "line-join": "round", "line-cap": "round" },
+        paint: { "line-color": "#00D2FF", "line-width": 3, "line-opacity": 0.8 },
+      });
+    });
     return () => {
       map.remove();
       mapRef.current = null;
@@ -223,10 +242,15 @@ function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Fly to region on change
+  // Fly to region on change + update AOI boundary
   useEffect(() => {
-    mapRef.current?.flyTo({ center: REGIONS[region].center, zoom: REGIONS[region].zoom });
+    const map = mapRef.current;
+    if (!map) return;
+    map.flyTo({ center: REGIONS[region].center, zoom: REGIONS[region].zoom });
+    const src = map.getSource("aoi-boundary") as maplibregl.GeoJSONSource | undefined;
+    src?.setData(boundaryFeature(region) as never);
   }, [region]);
+
 
   // Slider drag handlers
   useEffect(() => {
