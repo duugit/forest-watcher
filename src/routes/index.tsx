@@ -60,6 +60,37 @@ const REGIONS: Record<RegionKey, { label: string; center: [number, number]; zoom
   shan: { label: "Shan State (Taunggyi)", center: [97.03, 20.78], zoom: 9 },
 };
 
+// Approximate administrative boundaries of each analysis district (WGS84)
+const REGION_BOUNDARIES: Record<RegionKey, [number, number][]> = {
+  // Katha District, Sagaing Region
+  sagaing: [
+    [95.72, 24.72], [96.05, 24.86], [96.42, 24.88], [96.78, 24.72], [96.95, 24.44],
+    [96.9, 24.08], [96.7, 23.78], [96.36, 23.6], [95.98, 23.62], [95.68, 23.82],
+    [95.53, 24.12], [95.56, 24.46], [95.72, 24.72],
+  ],
+  // Dawei District, Tanintharyi Region
+  tanintharyi: [
+    [97.84, 14.72], [98.12, 14.78], [98.42, 14.6], [98.6, 14.28], [98.62, 13.92],
+    [98.46, 13.6], [98.22, 13.42], [97.96, 13.5], [97.8, 13.78], [97.72, 14.14],
+    [97.74, 14.48], [97.84, 14.72],
+  ],
+  // Taunggyi District, Shan State
+  shan: [
+    [96.62, 21.32], [96.94, 21.44], [97.3, 21.36], [97.52, 21.1], [97.56, 20.74],
+    [97.44, 20.38], [97.16, 20.18], [96.84, 20.22], [96.6, 20.44], [96.5, 20.78],
+    [96.52, 21.1], [96.62, 21.32],
+  ],
+};
+
+function boundaryFeature(key: RegionKey): GeoJSON.Feature {
+  return {
+    type: "Feature",
+    properties: {},
+    geometry: { type: "Polygon", coordinates: [REGION_BOUNDARIES[key]] },
+  };
+}
+
+
 const CLASS_COLORS = {
   dense: "#0B5345",
   forest: "#1E8449",
