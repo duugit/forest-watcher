@@ -554,6 +554,11 @@ function Dashboard() {
                 />
                 <span>Forest Gain</span>
               </div>
+              <div className="mt-1 flex items-center gap-2">
+                <span className="h-0.5 w-3 rounded-sm" style={{ backgroundColor: "#00D2FF", opacity: 0.8 }} />
+                <span>Analysis Boundary</span>
+              </div>
+
             </div>
           )}
 
