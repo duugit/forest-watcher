@@ -1,8 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 
-import { computeGeeMetrics } from "@/lib/gee.functions";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { format } from "date-fns";
@@ -239,7 +237,6 @@ function Dashboard() {
   const [sliderPct, setSliderPct] = useState(50);
   const [hasRun, setHasRun] = useState(false);
 
-  const runGeeMetrics = useServerFn(computeGeeMetrics);
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
