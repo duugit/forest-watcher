@@ -182,44 +182,50 @@ const GAIN_PATCHES: Patch[] = [
   { top: 50, left: 84, w: 6, h: 5, r: 25 },
 ];
 
-function mockMetricsFor(region: RegionKey): Metrics {
-  const seeds: Record<RegionKey, Metrics> = {
-    sagaing: {
-      loss: 4821,
-      gain: 612,
-      classes: [
-        { name: "Dense Forest", km2: 412.8, color: CLASS_COLORS.dense },
-        { name: "Forest", km2: 289.4, color: CLASS_COLORS.forest },
-        { name: "Grass/Veg", km2: 178.2, color: CLASS_COLORS.grass },
-        { name: "Water", km2: 42.6, color: CLASS_COLORS.water },
-        { name: "Bare Soil", km2: 137.9, color: CLASS_COLORS.bare },
-      ],
-    },
-    tanintharyi: {
-      loss: 6234,
-      gain: 421,
-      classes: [
-        { name: "Dense Forest", km2: 521.1, color: CLASS_COLORS.dense },
-        { name: "Forest", km2: 342.8, color: CLASS_COLORS.forest },
-        { name: "Grass/Veg", km2: 96.4, color: CLASS_COLORS.grass },
-        { name: "Water", km2: 78.9, color: CLASS_COLORS.water },
-        { name: "Bare Soil", km2: 189.3, color: CLASS_COLORS.bare },
-      ],
-    },
-    shan: {
-      loss: 3105,
-      gain: 892,
-      classes: [
-        { name: "Dense Forest", km2: 298.7, color: CLASS_COLORS.dense },
-        { name: "Forest", km2: 401.2, color: CLASS_COLORS.forest },
-        { name: "Grass/Veg", km2: 245.9, color: CLASS_COLORS.grass },
-        { name: "Water", km2: 31.4, color: CLASS_COLORS.water },
-        { name: "Bare Soil", km2: 89.6, color: CLASS_COLORS.bare },
-      ],
-    },
-  };
-  return seeds[region];
-}
+const CLASS_COLOR_BY_NAME: Record<string, string> = {
+  "Dense Forest": CLASS_COLORS.dense,
+  Forest: CLASS_COLORS.forest,
+  "Grass/Veg": CLASS_COLORS.grass,
+  Water: CLASS_COLORS.water,
+  "Bare Soil": CLASS_COLORS.bare,
+};
+
+const CURATED_METRICS: Partial<Record<RegionKey, Metrics>> = {
+  sagaing: {
+    loss: 4821,
+    gain: 612,
+    classes: [
+      { name: "Dense Forest", km2: 412.8, color: CLASS_COLORS.dense },
+      { name: "Forest", km2: 289.4, color: CLASS_COLORS.forest },
+      { name: "Grass/Veg", km2: 178.2, color: CLASS_COLORS.grass },
+      { name: "Water", km2: 42.6, color: CLASS_COLORS.water },
+      { name: "Bare Soil", km2: 137.9, color: CLASS_COLORS.bare },
+    ],
+  },
+  tanintharyi: {
+    loss: 6234,
+    gain: 421,
+    classes: [
+      { name: "Dense Forest", km2: 521.1, color: CLASS_COLORS.dense },
+      { name: "Forest", km2: 342.8, color: CLASS_COLORS.forest },
+      { name: "Grass/Veg", km2: 96.4, color: CLASS_COLORS.grass },
+      { name: "Water", km2: 78.9, color: CLASS_COLORS.water },
+      { name: "Bare Soil", km2: 189.3, color: CLASS_COLORS.bare },
+    ],
+  },
+  shan: {
+    loss: 3105,
+    gain: 892,
+    classes: [
+      { name: "Dense Forest", km2: 298.7, color: CLASS_COLORS.dense },
+      { name: "Forest", km2: 401.2, color: CLASS_COLORS.forest },
+      { name: "Grass/Veg", km2: 245.9, color: CLASS_COLORS.grass },
+      { name: "Water", km2: 31.4, color: CLASS_COLORS.water },
+      { name: "Bare Soil", km2: 89.6, color: CLASS_COLORS.bare },
+    ],
+  },
+};
+
 
 function Dashboard() {
   const [region, setRegion] = useState<RegionKey>("sagaing");
