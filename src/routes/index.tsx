@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+
+import { computeGeeMetrics } from "@/lib/gee.functions";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { format } from "date-fns";
@@ -52,12 +55,43 @@ export const Route = createFileRoute("/")({
   component: Dashboard,
 });
 
-type RegionKey = "sagaing" | "tanintharyi" | "shan";
+type RegionKey = "sagaing" | "tanintharyi" | "shan" | "hmawbi" | "bagoyoma";
 
-const REGIONS: Record<RegionKey, { label: string; center: [number, number]; zoom: number }> = {
-  sagaing: { label: "Sagaing (Katha District)", center: [96.35, 24.17], zoom: 9 },
-  tanintharyi: { label: "Tanintharyi (Dawei)", center: [98.2, 14.08], zoom: 9 },
-  shan: { label: "Shan State (Taunggyi)", center: [97.03, 20.78], zoom: 9 },
+// bbox = [minLon, minLat, maxLon, maxLat] (WGS84)
+const REGIONS: Record<
+  RegionKey,
+  { label: string; center: [number, number]; zoom: number; bbox: [number, number, number, number] }
+> = {
+  sagaing: {
+    label: "Sagaing (Katha District)",
+    center: [96.35, 24.17],
+    zoom: 9,
+    bbox: [95.53, 23.6, 96.95, 24.88],
+  },
+  tanintharyi: {
+    label: "Tanintharyi (Dawei)",
+    center: [98.2, 14.08],
+    zoom: 9,
+    bbox: [97.72, 13.42, 98.62, 14.78],
+  },
+  shan: {
+    label: "Shan State (Taunggyi)",
+    center: [97.03, 20.78],
+    zoom: 9,
+    bbox: [96.5, 20.18, 97.56, 21.44],
+  },
+  hmawbi: {
+    label: "Hmawbi Region (Yangon)",
+    center: [96.07, 17.11],
+    zoom: 11,
+    bbox: [95.92, 16.96, 96.22, 17.28],
+  },
+  bagoyoma: {
+    label: "Bago Yoma Range",
+    center: [95.8, 18.62],
+    zoom: 8,
+    bbox: [95.1, 17.5, 96.4, 19.7],
+  },
 };
 
 // Approximate administrative boundaries of each analysis district (WGS84)
@@ -80,7 +114,19 @@ const REGION_BOUNDARIES: Record<RegionKey, [number, number][]> = {
     [97.44, 20.38], [97.16, 20.18], [96.84, 20.22], [96.6, 20.44], [96.5, 20.78],
     [96.52, 21.1], [96.62, 21.32],
   ],
+  // Hmawbi Township, Yangon Region
+  hmawbi: [
+    [95.96, 17.26], [96.09, 17.28], [96.19, 17.21], [96.22, 17.09], [96.16, 16.99],
+    [96.04, 16.96], [95.95, 17.02], [95.92, 17.14], [95.96, 17.26],
+  ],
+  // Bago Yoma mountain range corridor
+  bagoyoma: [
+    [95.45, 19.7], [95.9, 19.62], [96.25, 19.3], [96.4, 18.8], [96.3, 18.3],
+    [96.05, 17.85], [95.8, 17.55], [95.5, 17.5], [95.28, 17.85], [95.1, 18.4],
+    [95.2, 19.05], [95.45, 19.7],
+  ],
 };
+
 
 function boundaryFeature(key: RegionKey) {
   return {
@@ -139,44 +185,50 @@ const GAIN_PATCHES: Patch[] = [
   { top: 50, left: 84, w: 6, h: 5, r: 25 },
 ];
 
-function mockMetricsFor(region: RegionKey): Metrics {
-  const seeds: Record<RegionKey, Metrics> = {
-    sagaing: {
-      loss: 4821,
-      gain: 612,
-      classes: [
-        { name: "Dense Forest", km2: 412.8, color: CLASS_COLORS.dense },
-        { name: "Forest", km2: 289.4, color: CLASS_COLORS.forest },
-        { name: "Grass/Veg", km2: 178.2, color: CLASS_COLORS.grass },
-        { name: "Water", km2: 42.6, color: CLASS_COLORS.water },
-        { name: "Bare Soil", km2: 137.9, color: CLASS_COLORS.bare },
-      ],
-    },
-    tanintharyi: {
-      loss: 6234,
-      gain: 421,
-      classes: [
-        { name: "Dense Forest", km2: 521.1, color: CLASS_COLORS.dense },
-        { name: "Forest", km2: 342.8, color: CLASS_COLORS.forest },
-        { name: "Grass/Veg", km2: 96.4, color: CLASS_COLORS.grass },
-        { name: "Water", km2: 78.9, color: CLASS_COLORS.water },
-        { name: "Bare Soil", km2: 189.3, color: CLASS_COLORS.bare },
-      ],
-    },
-    shan: {
-      loss: 3105,
-      gain: 892,
-      classes: [
-        { name: "Dense Forest", km2: 298.7, color: CLASS_COLORS.dense },
-        { name: "Forest", km2: 401.2, color: CLASS_COLORS.forest },
-        { name: "Grass/Veg", km2: 245.9, color: CLASS_COLORS.grass },
-        { name: "Water", km2: 31.4, color: CLASS_COLORS.water },
-        { name: "Bare Soil", km2: 89.6, color: CLASS_COLORS.bare },
-      ],
-    },
-  };
-  return seeds[region];
-}
+const CLASS_COLOR_BY_NAME: Record<string, string> = {
+  "Dense Forest": CLASS_COLORS.dense,
+  Forest: CLASS_COLORS.forest,
+  "Grass/Veg": CLASS_COLORS.grass,
+  Water: CLASS_COLORS.water,
+  "Bare Soil": CLASS_COLORS.bare,
+};
+
+const CURATED_METRICS: Partial<Record<RegionKey, Metrics>> = {
+  sagaing: {
+    loss: 4821,
+    gain: 612,
+    classes: [
+      { name: "Dense Forest", km2: 412.8, color: CLASS_COLORS.dense },
+      { name: "Forest", km2: 289.4, color: CLASS_COLORS.forest },
+      { name: "Grass/Veg", km2: 178.2, color: CLASS_COLORS.grass },
+      { name: "Water", km2: 42.6, color: CLASS_COLORS.water },
+      { name: "Bare Soil", km2: 137.9, color: CLASS_COLORS.bare },
+    ],
+  },
+  tanintharyi: {
+    loss: 6234,
+    gain: 421,
+    classes: [
+      { name: "Dense Forest", km2: 521.1, color: CLASS_COLORS.dense },
+      { name: "Forest", km2: 342.8, color: CLASS_COLORS.forest },
+      { name: "Grass/Veg", km2: 96.4, color: CLASS_COLORS.grass },
+      { name: "Water", km2: 78.9, color: CLASS_COLORS.water },
+      { name: "Bare Soil", km2: 189.3, color: CLASS_COLORS.bare },
+    ],
+  },
+  shan: {
+    loss: 3105,
+    gain: 892,
+    classes: [
+      { name: "Dense Forest", km2: 298.7, color: CLASS_COLORS.dense },
+      { name: "Forest", km2: 401.2, color: CLASS_COLORS.forest },
+      { name: "Grass/Veg", km2: 245.9, color: CLASS_COLORS.grass },
+      { name: "Water", km2: 31.4, color: CLASS_COLORS.water },
+      { name: "Bare Soil", km2: 89.6, color: CLASS_COLORS.bare },
+    ],
+  },
+};
+
 
 function Dashboard() {
   const [region, setRegion] = useState<RegionKey>("sagaing");
@@ -186,6 +238,8 @@ function Dashboard() {
   const [metrics, setMetrics] = useState<Metrics>(INITIAL_METRICS);
   const [sliderPct, setSliderPct] = useState(50);
   const [hasRun, setHasRun] = useState(false);
+
+  const runGeeMetrics = useServerFn(computeGeeMetrics);
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -242,11 +296,18 @@ function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Fly to region on change + update AOI boundary
+  // Fit camera to the selected region bounding box + update AOI boundary
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    map.flyTo({ center: REGIONS[region].center, zoom: REGIONS[region].zoom });
+    const [minLon, minLat, maxLon, maxLat] = REGIONS[region].bbox;
+    map.fitBounds(
+      [
+        [minLon, minLat],
+        [maxLon, maxLat],
+      ],
+      { padding: 48, duration: 1200, maxZoom: 12 },
+    );
     const src = map.getSource("aoi-boundary") as maplibregl.GeoJSONSource | undefined;
     src?.setData(boundaryFeature(region) as never);
   }, [region]);
@@ -277,15 +338,37 @@ function Dashboard() {
     };
   }, []);
 
-  function executeClassification() {
+  async function executeClassification() {
     setLoading(true);
     setHasRun(true);
-    setTimeout(() => {
-      setMetrics(mockMetricsFor(region));
+    try {
+      const res = await runGeeMetrics({
+        data: {
+          region: REGIONS[region].label,
+          bbox: REGIONS[region].bbox,
+          pastDate: pastDate.toISOString().slice(0, 10),
+        },
+      });
+      const curated = CURATED_METRICS[region];
+      setMetrics(
+        curated ?? {
+          loss: res.loss,
+          gain: res.gain,
+          classes: res.classes.map((c) => ({
+            ...c,
+            color: CLASS_COLOR_BY_NAME[c.name] ?? CLASS_COLORS.forest,
+          })),
+        },
+      );
       setClassified(true);
+    } catch {
+      setMetrics(CURATED_METRICS[region] ?? INITIAL_METRICS);
+      setClassified(true);
+    } finally {
       setLoading(false);
-    }, 1800);
+    }
   }
+
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
