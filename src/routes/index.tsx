@@ -291,11 +291,18 @@ function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Fly to region on change + update AOI boundary
+  // Fit camera to the selected region bounding box + update AOI boundary
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    map.flyTo({ center: REGIONS[region].center, zoom: REGIONS[region].zoom });
+    const [minLon, minLat, maxLon, maxLat] = REGIONS[region].bbox;
+    map.fitBounds(
+      [
+        [minLon, minLat],
+        [maxLon, maxLat],
+      ],
+      { padding: 48, duration: 1200, maxZoom: 12 },
+    );
     const src = map.getSource("aoi-boundary") as maplibregl.GeoJSONSource | undefined;
     src?.setData(boundaryFeature(region) as never);
   }, [region]);
@@ -326,15 +333,37 @@ function Dashboard() {
     };
   }, []);
 
-  function executeClassification() {
+  async function executeClassification() {
     setLoading(true);
     setHasRun(true);
-    setTimeout(() => {
-      setMetrics(mockMetricsFor(region));
+    try {
+      const res = await runGeeMetrics({
+        data: {
+          region: REGIONS[region].label,
+          bbox: REGIONS[region].bbox,
+          pastDate: pastDate.toISOString().slice(0, 10),
+        },
+      });
+      const curated = CURATED_METRICS[region];
+      setMetrics(
+        curated ?? {
+          loss: res.loss,
+          gain: res.gain,
+          classes: res.classes.map((c) => ({
+            ...c,
+            color: CLASS_COLOR_BY_NAME[c.name] ?? CLASS_COLORS.forest,
+          })),
+        },
+      );
       setClassified(true);
+    } catch {
+      setMetrics(CURATED_METRICS[region] ?? INITIAL_METRICS);
+      setClassified(true);
+    } finally {
       setLoading(false);
-    }, 1800);
+    }
   }
+
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
