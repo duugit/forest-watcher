@@ -342,24 +342,31 @@ function Dashboard() {
     setLoading(true);
     setHasRun(true);
     try {
-      const res = await runGeeMetrics({
-        data: {
+      const res = await fetch("http://localhost:5000/api/classify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           region: REGIONS[region].label,
-          bbox: REGIONS[region].bbox,
-          pastDate: pastDate.toISOString().slice(0, 10),
-        },
+          year: String(pastDate.getFullYear()),
+        }),
       });
-      const curated = CURATED_METRICS[region];
-      setMetrics(
-        curated ?? {
-          loss: res.loss,
-          gain: res.gain,
-          classes: res.classes.map((c) => ({
-            ...c,
-            color: CLASS_COLOR_BY_NAME[c.name] ?? CLASS_COLORS.forest,
-          })),
-        },
-      );
+      if (!res.ok) throw new Error(`API error ${res.status}`);
+      const json = (await res.json()) as {
+        loss?: number;
+        gain?: number;
+        classes?: { name: string; km2: number; color?: string }[];
+      };
+
+      setMetrics({
+        loss: Number(json.loss ?? 0),
+        gain: Number(json.gain ?? 0),
+        classes:
+          json.classes?.map((c) => ({
+            name: c.name,
+            km2: Number(c.km2),
+            color: c.color ?? CLASS_COLOR_BY_NAME[c.name] ?? CLASS_COLORS.forest,
+          })) ?? INITIAL_METRICS.classes,
+      });
       setClassified(true);
     } catch {
       setMetrics(CURATED_METRICS[region] ?? INITIAL_METRICS);
@@ -368,6 +375,7 @@ function Dashboard() {
       setLoading(false);
     }
   }
+
 
 
   return (
