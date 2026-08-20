@@ -30,13 +30,23 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build project
+      - name: Build static site
+        env:
+          GITHUB_PAGES: "true"
         run: npm run build
+
+      - name: Prepare Pages artifact
+        run: |
+          touch dist/client/.nojekyll
+          cp dist/client/index.html dist/client/404.html
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
 
       - name: Upload build artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: dist/client
 
   deploy:
     environment:

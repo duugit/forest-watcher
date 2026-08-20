@@ -6,10 +6,25 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
+// GitHub Pages serves the site from https://<user>.github.io/forest-watcher/, so asset URLs
+// need that prefix. It is opt-in via GITHUB_PAGES=true (set in the deploy workflow) so the
+// Lovable preview / published app, which are served from the domain root, keep working.
+const isGitHubPages = process.env.GITHUB_PAGES === "true";
+
 export default defineConfig({
+  vite: {
+    base: isGitHubPages ? "/forest-watcher/" : "/",
+  },
+  // GitHub Pages is static hosting, so prerender the routes to plain HTML files.
+  nitro: isGitHubPages ? false : undefined,
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
+    ...(isGitHubPages
+      ? { prerender: { enabled: true, crawlLinks: true }, pages: [{ path: "/" }] }
+      : {}),
   },
+
 });
+
