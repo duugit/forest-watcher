@@ -15,10 +15,16 @@ export default defineConfig({
   vite: {
     base: isGitHubPages ? "/forest-watcher/" : "/",
   },
+  // GitHub Pages is static hosting, so prerender the routes to plain HTML files.
+  nitro: isGitHubPages ? { preset: "static" } : undefined,
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
+    ...(isGitHubPages
+      ? { prerender: { enabled: true, crawlLinks: true }, pages: [{ path: "/" }] }
+      : {}),
   },
+
 });
 
