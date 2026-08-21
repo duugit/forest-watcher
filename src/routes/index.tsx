@@ -161,71 +161,24 @@ const INITIAL_METRICS: Metrics = {
   ],
 };
 
-type Patch = { top: number; left: number; w: number; h: number; r: number };
-
-// Mock AI-detected change patches (percentages relative to the map stage)
-const LOSS_PATCHES: Patch[] = [
-  { top: 18, left: 22, w: 14, h: 9, r: 12 },
-  { top: 30, left: 55, w: 10, h: 7, r: -8 },
-  { top: 46, left: 34, w: 18, h: 11, r: 20 },
-  { top: 58, left: 68, w: 12, h: 8, r: -15 },
-  { top: 70, left: 20, w: 9, h: 6, r: 5 },
-  { top: 26, left: 78, w: 8, h: 6, r: 30 },
-  { top: 80, left: 48, w: 11, h: 7, r: -22 },
-  { top: 12, left: 44, w: 7, h: 5, r: 0 },
-];
-
-const GAIN_PATCHES: Patch[] = [
-  { top: 38, left: 14, w: 8, h: 5, r: -10 },
-  { top: 62, left: 42, w: 9, h: 6, r: 18 },
-  { top: 22, left: 62, w: 7, h: 5, r: -5 },
-  { top: 74, left: 76, w: 8, h: 6, r: 12 },
-  { top: 50, left: 84, w: 6, h: 5, r: 25 },
-];
-
 const CLASS_COLOR_BY_NAME: Record<string, string> = {
   "Dense Forest": CLASS_COLORS.dense,
   Forest: CLASS_COLORS.forest,
   "Grass/Veg": CLASS_COLORS.grass,
+  "Grass/Vegetation": CLASS_COLORS.grass,
   Water: CLASS_COLORS.water,
   "Bare Soil": CLASS_COLORS.bare,
+  "Non-Forest Ground": CLASS_COLORS.bare,
 };
 
-const CURATED_METRICS: Partial<Record<RegionKey, Metrics>> = {
-  sagaing: {
-    loss: 4821,
-    gain: 612,
-    classes: [
-      { name: "Dense Forest", km2: 412.8, color: CLASS_COLORS.dense },
-      { name: "Forest", km2: 289.4, color: CLASS_COLORS.forest },
-      { name: "Grass/Veg", km2: 178.2, color: CLASS_COLORS.grass },
-      { name: "Water", km2: 42.6, color: CLASS_COLORS.water },
-      { name: "Bare Soil", km2: 137.9, color: CLASS_COLORS.bare },
-    ],
-  },
-  tanintharyi: {
-    loss: 6234,
-    gain: 421,
-    classes: [
-      { name: "Dense Forest", km2: 521.1, color: CLASS_COLORS.dense },
-      { name: "Forest", km2: 342.8, color: CLASS_COLORS.forest },
-      { name: "Grass/Veg", km2: 96.4, color: CLASS_COLORS.grass },
-      { name: "Water", km2: 78.9, color: CLASS_COLORS.water },
-      { name: "Bare Soil", km2: 189.3, color: CLASS_COLORS.bare },
-    ],
-  },
-  shan: {
-    loss: 3105,
-    gain: 892,
-    classes: [
-      { name: "Dense Forest", km2: 298.7, color: CLASS_COLORS.dense },
-      { name: "Forest", km2: 401.2, color: CLASS_COLORS.forest },
-      { name: "Grass/Veg", km2: 245.9, color: CLASS_COLORS.grass },
-      { name: "Water", km2: 31.4, color: CLASS_COLORS.water },
-      { name: "Bare Soil", km2: 89.6, color: CLASS_COLORS.bare },
-    ],
-  },
-};
+// Backend (Python Flask + Google Earth Engine) base URL.
+// Override with VITE_CLASSIFY_API in a .env file when the server runs elsewhere.
+const API_BASE =
+  (import.meta.env.VITE_CLASSIFY_API as string | undefined)?.replace(/\/$/, "") ??
+  "http://127.0.0.1:5000";
+
+type BackendStatus = "checking" | "online" | "offline";
+
 
 
 function Dashboard() {
