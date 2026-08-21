@@ -189,12 +189,16 @@ function Dashboard() {
   const [metrics, setMetrics] = useState<Metrics>(INITIAL_METRICS);
   const [sliderPct, setSliderPct] = useState(50);
   const [hasRun, setHasRun] = useState(false);
-
+  const [backendStatus, setBackendStatus] = useState<BackendStatus>("checking");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [changeGeo, setChangeGeo] = useState<{ loss: Ring[]; gain: Ring[] }>({ loss: [], gain: [] });
+  const [projectionTick, setProjectionTick] = useState(0);
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const draggingRef = useRef(false);
+
 
   // Init map
   useEffect(() => {
