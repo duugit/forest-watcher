@@ -338,40 +338,56 @@ function Dashboard() {
   async function executeClassification() {
     setLoading(true);
     setHasRun(true);
+
+    const selectedRegion = REGIONS[region].label;
+    const date = format(pastDate, "yyyy-MM-dd");
+
     try {
-      const res = await fetch("http://localhost:5000/api/classify", {
+      const res = await fetch("http://127.0.0.1:5000/api/classify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          region: REGIONS[region].label,
-          year: String(pastDate.getFullYear()),
-        }),
+        body: JSON.stringify({ selectedRegion, date }),
       });
-      if (!res.ok) throw new Error(`API error ${res.status}`);
+      if (!res.ok) throw new Error(`Flask API error ${res.status}`);
+
       const json = (await res.json()) as {
-        loss?: number;
-        gain?: number;
-        classes?: { name: string; km2: number; color?: string }[];
+        totalForestLossHectares?: number;
+        totalForestGainHectares?: number;
+        landCoverBreakdownKm2?: Record<string, number> | { name: string; km2: number; color?: string }[];
       };
 
+      const raw = json.landCoverBreakdownKm2;
+      let classes = INITIAL_METRICS.classes;
+
+      if (Array.isArray(raw)) {
+        classes = raw.map((c) => ({
+          name: c.name,
+          km2: Number(c.km2) || 0,
+          color: c.color ?? CLASS_COLOR_BY_NAME[c.name] ?? CLASS_COLORS.forest,
+        }));
+      } else if (raw && typeof raw === "object") {
+        classes = Object.entries(raw).map(([name, km2]) => ({
+          name,
+          km2: Number(km2) || 0,
+          color: CLASS_COLOR_BY_NAME[name] ?? CLASS_COLORS.forest,
+        }));
+      }
+
       setMetrics({
-        loss: Number(json.loss ?? 0),
-        gain: Number(json.gain ?? 0),
-        classes:
-          json.classes?.map((c) => ({
-            name: c.name,
-            km2: Number(c.km2),
-            color: c.color ?? CLASS_COLOR_BY_NAME[c.name] ?? CLASS_COLORS.forest,
-          })) ?? INITIAL_METRICS.classes,
+        loss: Number(json.totalForestLossHectares ?? 0),
+        gain: Number(json.totalForestGainHectares ?? 0),
+        classes: classes.length ? classes : INITIAL_METRICS.classes,
       });
       setClassified(true);
-    } catch {
+    } catch (err) {
+      console.warn("Flask classify request failed, using curated fallback:", err);
       setMetrics(CURATED_METRICS[region] ?? INITIAL_METRICS);
       setClassified(true);
     } finally {
       setLoading(false);
     }
   }
+
 
 
 
