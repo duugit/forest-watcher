@@ -25,10 +25,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
 
-      - name: Install dependencies
-        run: npm install
+      - name: Install dependencies (no lockfile required)
+        run: npm install --no-audit --no-fund
 
       - name: Build static site (base /forest-watcher/)
         env:
