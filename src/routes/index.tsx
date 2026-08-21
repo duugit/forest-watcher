@@ -30,6 +30,8 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
+import { polygonsAreaHectares, toRings, type Ring } from "@/lib/geo";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
